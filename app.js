@@ -13,6 +13,7 @@ const findOrCreate= require("mongoose-findorcreate");
 const LocalStrategy = require("passport-local").Strategy;
 const flash= require("connect-flash");
 const app = express();
+const https=require("https");
 
 app.use(express.static("public"));
 app.set('view engine', 'ejs');
@@ -88,6 +89,16 @@ passport.use(new GoogleStrategy({
   }
 ));
 
+app.get("/quizdata",function(req, res){
+
+  
+  
+  https.get(process.env.CLIENT_URL,function(response){
+    response.on("data", function(data){
+      res.send(JSON.parse(data));
+    })
+  })
+})
 
 app.get("/",function(req,res){
   res.render("first");
