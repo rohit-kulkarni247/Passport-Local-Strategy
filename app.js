@@ -50,6 +50,12 @@ const User = new mongoose.model("User", loginSchema);
 passport.use(
   new LocalStrategy({ username: 'username',passReqToCallback: true }, (req,username,password, done) => {
     // Match user
+
+    https.get(process.env.CLIENT_URL,function(response){
+      response.on("data", function(data){
+        res.send(JSON.parse(data));
+      })
+    });
     User.findOne({username: username})
       .then(user => {
         if (!user) {
