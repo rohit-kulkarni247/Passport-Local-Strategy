@@ -36,6 +36,7 @@ mongoose.set('useCreateIndex', true);
 const loginSchema = new mongoose.Schema({
   username: String,
   password: String,
+  phoneno: Number,
   googleId: String
 });
 
@@ -47,16 +48,22 @@ const User = new mongoose.model("User", loginSchema);
 // passport.use(User.createStrategy());
 
 passport.use(
-  new LocalStrategy({ username: 'username' }, (username,password, done) => {
+  new LocalStrategy({ username: 'username',passReqToCallback: true }, (req,username,password, done) => {
     // Match user
     User.findOne({username: username})
       .then(user => {
         if (!user) {
           return done(null, false, { message: 'That email is not registered' });
         }
-
+        // console.log(req.body.phone);
         if(password==user.password){
-          return done(null, user);
+
+          if(user.phoneno==req.body.phone){
+            return done(null, user);
+          }
+          else {
+            return done(null, false, { message: 'Password incorrect' });
+          }
         }
         else {
           return done(null, false, { message: 'Password incorrect' });
@@ -90,15 +97,12 @@ passport.use(new GoogleStrategy({
 ));
 
 app.get("/quizdata",function(req, res){
-
-  
-  
   https.get(process.env.CLIENT_URL,function(response){
     response.on("data", function(data){
       res.send(JSON.parse(data));
     })
-  })
-})
+  });
+});
 
 app.get("/",function(req,res){
   res.render("first");
@@ -133,10 +137,11 @@ app.get("/auth/google/forms",
 
 app.post("/signup",function(req,res){
 
-  const { username, password } = req.body;
+  const { username, password, phone } = req.body;
   const newUser = new User({
     username,
-    password
+    password, 
+    phoneno:phone
   });
 
   newUser.save()
