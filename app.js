@@ -51,15 +51,16 @@ passport.use(
   new LocalStrategy({ username: 'username',passReqToCallback: true }, (req,username,password, done) => {
     // Match user
 
-    https.get(process.env.CLIENT_URL,function(response){
-      response.on("data", function(data){
-        res.send(JSON.parse(data));
-      })
-    });
+    // https.get(process.env.CLIENT_URL,function(response){
+    //   response.on("data", function(data){
+    //     res.send(JSON.parse(data));
+    //   })
+    // });
     User.findOne({username: username})
       .then(user => {
         if (!user) {
-          return done(null, false, { message: 'That email is not registered' });
+          done(null, false, { message: 'That email is not registered' });
+          throw new Error("email not registered");
         }
         // console.log(req.body.phone);
         if(password==user.password){
@@ -68,11 +69,13 @@ passport.use(
             return done(null, user);
           }
           else {
-            return done(null, false, { message: 'Password incorrect' });
+            done(null, false, { message: 'Password incorrect' });
+            throw new Error("password incorrect");
           }
         }
         else {
-          return done(null, false, { message: 'Password incorrect' });
+          done(null, false, { message: 'Password incorrect' });
+          throw new Error("password incorrect");
         }
       })
       .catch(err => console.log(err));
@@ -115,7 +118,7 @@ app.get("/",function(req,res){
 });
 
 app.get("/login",function(req,res){
-  res.render("login");
+  res.render("login",{message:""});
 });
 
 app.get("/signup",function(req,res){
@@ -127,7 +130,7 @@ app.get("/next",function(req,res){
     res.render("next");
   }
   else{
-    res.redirect("/");
+    res.render("first",{});
   }
 });
 
@@ -159,11 +162,22 @@ app.post("/signup",function(req,res){
 
 
 app.post("/login", function(req, res,next){
-  passport.authenticate("local", {
-    successRedirect: '/next',
-    failureRedirect: '/login',
-    failureFlash: true
-  })(req, res, next);
+  passport.authenticate("local", 
+    function(err, user, info) {
+      if (err) { 
+        console.log("hello");
+        // return next(err);
+       }
+      if (!user) { 
+        res.render('login',{message:"Invalid details entered"}); }
+      req.logIn(user, function(err) {
+        if (err) { 
+          console.log("hello");
+          return next(err); }
+        return res.redirect('/next');
+      });
+    }
+  )(req, res, next);
 });
 
 app.get("/logout", function(req, res){

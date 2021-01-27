@@ -7,9 +7,15 @@
 </head>
 
 <body>
+  <li class="nav-item">
+    <% if(message!=''){%>
+      <a class="nav-link" href="#"><%=message%></a>
+    <% } %>
+  </li>
   <h1>Login Page</h1>
-  <form class="" action="/login" method="post">
 
+  <form class="" action="/login" method="post">
+    
     <label for="username">Username:</label>
     <input type="email" name="username" value="" placeholder="Enter Username"><br><br>
     <label for="password">Password:</label>
